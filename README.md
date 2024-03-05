@@ -1,9 +1,9 @@
 # \[Group name\]
 
 **Group members:**
-- A
-- B
-- C
+- Mathias Porsgaard
+- Mikkel Reich
+- Gabriele Cugini
 
 This repository contains  
 1. Inaugural project. 
