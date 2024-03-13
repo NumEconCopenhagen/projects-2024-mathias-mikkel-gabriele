@@ -1,4 +1,6 @@
 from types import SimpleNamespace
+from scipy import optimize
+import numpy as np
 
 class ExchangeEconomyClass:
 
@@ -45,3 +47,21 @@ class ExchangeEconomyClass:
         eps2 = x2A-par.w2A + x2B-(1-par.w2A)
 
         return eps1,eps2
+    
+    # Social planner solver
+    def solve_central(self):
+        par = self.par
+        
+        # objective function to be minimized
+        obj_fun_central = lambda x: -(self.utility_A(x[0],x[1])+self.utility_B((1-x[0]),(1-x[1])))
+        
+        # bounds and counstraints
+        constraints = ({'type': 'ineq', 'fun': lambda x: x[0]-par.w1A+(1-x[0])-(1-par.w1A)})
+        bounds = ((0,1),(0,1))
+        
+        # call solver
+        initial_guess = [par.w1A,par.w2A]
+        sol = optimize.minimize(obj_fun_central,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
+        
+        # print solution
+        return print(f'x1A = {sol.x[0]} x2A = {sol.x[1]}, U_central = {-obj_fun_central((sol.x[0],sol.x[1]))}')
