@@ -16,6 +16,12 @@ class ExchangeEconomyClass:
         par.w1A = 0.8
         par.w2A = 0.3
 
+        # parameter for storing results
+        sol = self.sol = SimpleNamespace()
+        sol.x1 = np.nan
+        sol.x2 = np.nan
+        sol.u = np.nan
+
     def utility_A(self,x1A,x2A):
         par = self.par
         return x1A**(par.alpha)*x2A**(1-par.alpha)
@@ -51,6 +57,7 @@ class ExchangeEconomyClass:
     # Social planner solver
     def solve_central(self):
         par = self.par
+        sol = self.sol
         
         # objective function to be minimized
         obj_fun_central = lambda x: -(self.utility_A(x[0],x[1])+self.utility_B((1-x[0]),(1-x[1])))
@@ -61,7 +68,13 @@ class ExchangeEconomyClass:
         
         # call solver
         initial_guess = [par.w1A,par.w2A]
-        sol = optimize.minimize(obj_fun_central,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
+        res = optimize.minimize(obj_fun_central,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
         
-        # print solution
-        return print(f'x1A = {sol.x[0]} x2A = {sol.x[1]}, U_central = {-obj_fun_central((sol.x[0],sol.x[1]))}')
+        # save and print solution
+
+        sol.x1 = res.x[0]
+        sol.x2 = res.x[1]
+        sol.u = -obj_fun_central((res.x[0],res.x[1]))
+
+        print(f'x1A = {sol.x1} x2A = {sol.x2}, U_central = {sol.u}')
+
