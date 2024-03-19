@@ -21,6 +21,7 @@ class ExchangeEconomyClass:
         sol.x1 = np.nan
         sol.x2 = np.nan
         sol.u = np.nan
+        sol.p = np.nan
 
     def utility_A(self,x1A,x2A):
         par = self.par
@@ -52,29 +53,47 @@ class ExchangeEconomyClass:
         eps1 = x1A-par.w1A + x1B-(1-par.w1A)
         eps2 = x2A-par.w2A + x2B-(1-par.w2A)
 
-        return eps1,eps2
+        return eps1, eps2
     
-    # Social planner solver
-    def solve_central(self):
+    # Function that solves
+    def solve(self, type="central"):
         par = self.par
         sol = self.sol
-        
-        # objective function to be minimized
-        obj_fun_central = lambda x: -(self.utility_A(x[0],x[1])+self.utility_B((1-x[0]),(1-x[1])))
-        
-        # bounds and counstraints
-        constraints = ({'type': 'ineq', 'fun': lambda x: x[0]-par.w1A+(1-x[0])-(1-par.w1A)})
+
+        # objective function to be minimized and constraints, depending on type chosen
+        if type == "central":
+            obj_fun = lambda x: -(self.utility_A(x[0],x[1])+self.utility_B((1-x[0]),(1-x[1])))
+            constraints = ({'type': 'ineq', 'fun': lambda x: x[0]-par.w1A+(1-x[0])-(1-par.w1A)})
+        elif type == "mm":
+            obj_fun = lambda x: -(self.utility_A(x[0],x[1]))
+            constraints = ({'type': 'ineq', 'fun': lambda x: x[0]-par.w1A+(1-x[0])-(1-par.w1A)},{'type': 'ineq', 'fun': lambda x: self.utility_B(1-x[0],1-x[1])-self.utility_B(1-par.w1A,1-par.w2A)})
+        elif type == 'market':
+            obj_fun = lambda x: np.sum(np.abs(self.check_market_clearing(x)))
+            constraints = ()
+        else:
+            print('no type chosen')
+    
+        # bounds
         bounds = ((0,1),(0,1))
         
         # call solver
-        initial_guess = [par.w1A,par.w2A]
-        res = optimize.minimize(obj_fun_central,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
-        
-        # save and print solution
+        if type == 'market':
+            initial_prices = [1.0]
+            res = optimize.minimize(obj_fun, initial_prices, method='Nelder-Mead')
+            p1 = res.x[0]
+            x1A, x2A = self.demand_A(p1)
+            x1B, x2B = self.demand_B(p1)
+            sol.p = p1
+            sol.x1 = x1A
+            sol.x2 = x2A
+            sol.u = self.utility_A(x1A, x2A) + self.utility_B(x1B, x2B)
+        else:
+            initial_guess = [par.w1A,par.w2A]
+            res = optimize.minimize(obj_fun,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
+            # save and print solution
+            sol.x1 = res.x[0]
+            sol.x2 = res.x[1]
+            sol.u = -obj_fun((res.x[0],res.x[1]))
+            sol.p = None
 
-        sol.x1 = res.x[0]
-        sol.x2 = res.x[1]
-        sol.u = -obj_fun_central((res.x[0],res.x[1]))
-
-        print(f'x1A = {sol.x1} x2A = {sol.x2}, U_central = {sol.u}')
-
+        print(f'x1A = {sol.x1} x2A = {sol.x2}, U_{type} = {sol.u}, u_A = {self.utility_A(sol.x1,sol.x2)}, u_B = {self.utility_B(1-sol.x1,1-sol.x2)}, p = {sol.p}')
