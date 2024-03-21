@@ -89,7 +89,7 @@ class ExchangeEconomyClass:
             sol.u = self.utility_A(x1A, x2A) + self.utility_B(x1B, x2B)
             #print solution
             print(f'x1A = {sol.x1:.3f} x2A = {sol.x2:.3f}, U_{type} = {sol.u:.3f}, u_A = {self.utility_A(sol.x1,sol.x2):.3f}, u_B = {self.utility_B(1-sol.x1,1-sol.x2):.3f}, p = {sol.p:.3f}')
-        else:       # Bot social planner and market maker optimizes utility under constraints
+        else:       # Both social planner and market maker optimizes utility under constraints
             initial_guess = [par.w1A,par.w2A]
             res = optimize.minimize(obj_fun,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
             # save and print solution
