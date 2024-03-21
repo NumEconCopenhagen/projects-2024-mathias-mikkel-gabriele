@@ -62,14 +62,13 @@ class ExchangeEconomyClass:
 
         # objective function to be minimized and constraints, depending on type chosen
         if type == "central":
-            obj_fun = lambda x: -(self.utility_A(x[0],x[1])+self.utility_B((1-x[0]),(1-x[1])))
+            obj_fun = lambda x: -(self.utility_A(x[0],x[1])+self.utility_B((1-x[0]),(1-x[1])))       # The social planner maximises aggregate utility subject to available supply
             constraints = ({'type': 'ineq', 'fun': lambda x: x[0]-par.w1A+(1-x[0])-(1-par.w1A)})
         elif type == "mm":
-            obj_fun = lambda x: -(self.utility_A(x[0],x[1]))
+            obj_fun = lambda x: -(self.utility_A(x[0],x[1]))        # A maximises their own utility, subject to the available supply and that B is not worse of than at the beginning
             constraints = ({'type': 'ineq', 'fun': lambda x: x[0]-par.w1A+(1-x[0])-(1-par.w1A)},{'type': 'ineq', 'fun': lambda x: self.utility_B(1-x[0],1-x[1])-self.utility_B(1-par.w1A,1-par.w2A)})
-        elif type == 'market':
+        elif type == 'market':                                      # The market finds the efficient allocation that makes the goods markets clear
             obj_fun = lambda x: np.sum(np.abs(self.check_market_clearing(x)))
-            constraints = ()
         else:
             print('no type chosen')
     
@@ -77,9 +76,10 @@ class ExchangeEconomyClass:
         bounds = ((0,1),(0,1))
         
         # call solver
-        if type == 'market':
+        if type == 'market':        # Market maker uses different solver as constraints are not needed, while additional code implemting p1 is.
             initial_prices = [1.0]
             res = optimize.minimize(obj_fun, initial_prices, method='Nelder-Mead')
+            # store results
             p1 = res.x[0]
             x1A, x2A = self.demand_A(p1)
             x1B, x2B = self.demand_B(p1)
@@ -87,13 +87,13 @@ class ExchangeEconomyClass:
             sol.x1 = x1A
             sol.x2 = x2A
             sol.u = self.utility_A(x1A, x2A) + self.utility_B(x1B, x2B)
-        else:
+            #print solution
+            print(f'x1A = {sol.x1:.3f} x2A = {sol.x2:.3f}, U_{type} = {sol.u:.3f}, u_A = {self.utility_A(sol.x1,sol.x2):.3f}, u_B = {self.utility_B(1-sol.x1,1-sol.x2):.3f}, p = {sol.p:.3f}')
+        else:       # Bot social planner and market maker optimizes utility under constraints
             initial_guess = [par.w1A,par.w2A]
             res = optimize.minimize(obj_fun,initial_guess,method='SLSQP',bounds=bounds,constraints=constraints)
             # save and print solution
             sol.x1 = res.x[0]
             sol.x2 = res.x[1]
             sol.u = -obj_fun((res.x[0],res.x[1]))
-            sol.p = None
-
-        print(f'x1A = {sol.x1} x2A = {sol.x2}, U_{type} = {sol.u}, u_A = {self.utility_A(sol.x1,sol.x2)}, u_B = {self.utility_B(1-sol.x1,1-sol.x2)}, p = {sol.p}')
+            print(f'x1A = {sol.x1:.3f} x2A = {sol.x2:.3f}, U_{type} = {sol.u:.3f}, u_A = {self.utility_A(sol.x1,sol.x2):.3f}, u_B = {self.utility_B(1-sol.x1,1-sol.x2):.3f}')
