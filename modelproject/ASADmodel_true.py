@@ -30,7 +30,7 @@ class ASAD_class():
         par.betaone = 0.5
         par.betatwo = 0.5
         par.gamma = 0.5
-        par.Tpath = 50
+        par.Tpath = 500
         par.h = 0.5
         par.b = 0.5
         par.theta = 0.5
@@ -43,7 +43,7 @@ class ASAD_class():
         path = self.path
 
         # Create paths for variables
-        allvarnames = ['yhat','pihat','er','e','s','z','ihat','']
+        allvarnames = ['yhat','pihat','er','e','s','z','ihat']
         for varname in allvarnames:
                 path.__dict__[varname] =  np.nan*np.ones(par.Tpath)
 
@@ -108,11 +108,11 @@ class ASAD_class():
         # Function that creates specified durationed shocks of equal value
 
         if z == True:
-            for i in range(t0,t1+1,1):
+            for i in range(t0,t1,1):
                 path.z[i] = n
         
         if s == True:
-            for i in range(t0,t1+1,1):
+            for i in range(t0,t1,1):
                 path.s[i] = n
     
     def stochastic_shocks(self,mean,sd,z=False,s=False):
