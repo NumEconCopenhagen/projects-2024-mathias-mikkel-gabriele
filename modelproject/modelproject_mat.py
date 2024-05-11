@@ -2,6 +2,176 @@ from types import SimpleNamespace
 import numpy as np
 from scipy import optimize
 
+import numpy as np
+
+import numpy as np
+
+class RamseyModel:
+    def __init__(self, T, sigma, gamma, upsilon, alpha, delta, r, A, K0, L_bar):
+        self.T = T  # Number of periods
+        self.sigma = sigma  # Coefficient of relative risk aversion
+        self.gamma = gamma  # Elasticity of labor supply
+        self.upsilon = upsilon  # Output elasticity of labor
+        self.alpha = alpha  # Output elasticity of capital
+        self.delta = delta  # Depreciation rate
+        self.r = r  # Real interest rate
+        self.A = A  # Total factor productivity
+        self.K0 = K0  # Initial capital stock
+        self.L_bar = L_bar  # Exogenous labor supply
+
+    def utility(self, C, N):
+        """
+        Utility function: U(C, N) = (C^(1-sigma) - 1) / (1 - sigma) - upsilon * (N^(1+gamma) - 1) / (1 + gamma)
+        """
+        return (C**(1 - self.sigma) - 1) / (1 - self.sigma) - self.upsilon * (N**(1 + self.gamma) - 1) / (1 + self.gamma)
+
+    def euler_equation(self, C, N, K, t):
+        """
+        Euler equation: U'(C, N) = (1 + r) * U'(C(+1), N(+1))
+        """
+        C_next = C[t + 1] if t < self.T - 1 else C[t]  # Assume consumption is constant in the last period
+        N_next = N[t + 1] if t < self.T - 1 else N[t]  # Assume labor supply is constant in the last period
+        
+        # Calculate marginal utility
+        U_prime_C = C[t]**(-self.sigma)
+        U_prime_N = -self.upsilon * N[t]**self.gamma
+        
+        U_prime_C_next = C_next**(-self.sigma)
+        U_prime_N_next = -self.upsilon * N_next**self.gamma
+        
+        return U_prime_C - (1 + self.r) * U_prime_C_next, U_prime_N - (1 + self.r) * U_prime_N_next
+
+    def solve_model(self):
+        # Initialize arrays to store optimal decisions
+        C = np.zeros(self.T)
+        N = np.zeros(self.T)
+        K = np.zeros(self.T)
+
+        # Initial guess for consumption and labor supply
+        C[0] = 0.5  # Adjust initial consumption for better convergence
+        N[0] = self.L_bar
+
+        # Dynamic programming algorithm to solve for optimal decisions
+        for t in range(self.T - 1):
+            # Euler equation method to find optimal consumption and labor supply
+            C[t + 1] = ???  # Calculate optimal consumption for period t+1
+            N[t + 1] = ???  # Calculate optimal labor supply for period t+1
+            K[t + 1] = (1 - self.delta) * K[t] + self.A * K[t]**self.alpha * N[t]**(1 - self.alpha) - C[t] + self.r * K[t]
+
+        return C, N, K
+
+# Example parameters
+T = 50  # Number of periods
+sigma = 2  # Coefficient of relative risk aversion
+gamma = 1  # Elasticity of labor supply
+upsilon = 1  # Output elasticity of labor
+alpha = 0.3  # Output elasticity of capital
+delta = 0.05  # Depreciation rate
+r = 0.05  # Real interest rate
+A = 1  # Total factor productivity
+K0 = 1  # Initial capital stock
+L_bar = 0.3  # Exogenous labor supply
+
+# Create instance of RamseyModel
+model = RamseyModel(T, sigma, gamma, upsilon, alpha, delta, r, A, K0, L_bar)
+
+# Solve the model
+C, N, K = model.solve_model()
+
+# Print optimal paths of consumption, labor supply, and capital
+print("Optimal consumption path:", C)
+print("Optimal labor supply path:", N)
+print("Optimal capital path:", K)
+
+
+
+class RamseyLabor():
+    def __init__(self, do_print=True):
+        if do_print:
+            print('Initializing the model:')
+        self.par = SimpleNamespace()
+        self.ss = SimpleNamespace()
+        self.path = SimpleNamespace()
+        if do_print:
+            print('Calling .setup()')
+        self.setup()
+        if do_print:
+            print('Calling .allocate()')
+        self.allocate()
+
+    def setup(self):
+        par = self.par
+
+        #utility function baseline parameters
+        par.sigma = 2.0 # CRRA coefficient
+        par.gamma = 2.0 # IES
+        par.beta = np.nan # discount factor
+        par.upsilon = 1.0
+
+        # b. firms
+        par.Gamma = np.nan
+        par.production_function = 'cobb-douglas'
+        par.alpha = 0.33 # capital weight
+        par.theta = 0.05 # substitution parameter (CES case)     
+        par.delta = 0.05 # depreciation rate
+
+        # Initial values of variables
+        par.K_lag_ini = 1.0
+        par.N_ini = 0.5
+
+        par.solver = 'broyden' # solver for the equation system, 'broyden' or 'scipy'
+        par.Tpath = 500 # length of transition path, "truncation horizon"
+
+    def allocate(self):
+        """ allocate arrays for transition path """
+        
+        par = self.par
+        path = self.path
+
+        allvarnames = ['B','K','C','N','rk','w','r','Y','K_lag','Gamma']
+        for varname in allvarnames:
+            path.__dict__[varname] =  np.nan*np.ones(par.Tpath)
+
+    def production(self, K, N):
+        
+        par = self.par 
+
+        if par.production_function == "ces":
+            Y = par.Gamma * (par.alpha * K**(-par.theta) + (1 - par.alpha) * N**(-par.theta))**(-1/par.theta)
+            rk = par.Gamma * par.alpha * K**(-par.theta - 1) * (Y / par.Gamma)**(1 + par.theta)
+            w = par.Gamma * (1 - par.alpha) * N**(-par.theta - 1) * (Y / par.Gamma)**(1 + par.theta)
+
+        elif par.production_function == 'cobb-douglas':
+
+            # a. production
+            Y = Gamma*K_lag**par.alpha *N**(1-par.alpha)
+
+            # b. factor prices
+            rk = Gamma*par.alpha * K_lag**(par.alpha-1) * N**(1-par.alpha)
+            w = Gamma*(1-par.alpha) * K_lag**(par.alpha) * N**(-par.alpha)
+
+        else:
+              
+            raise Exception('unknown type of production function')
+
+        return Y,rk,w 
+
+    def utility(self, C, N):
+        par = self.par
+        return C**(1 - par.sigma) / (1 - par.sigma) - par.upsilon * N**(1 + par.gamma) / (1 + par.gamma)
+    
+    def euler(self, C, K, K_lag, N, N_lag, Y, Y_lag, rk, w, r, Gamma):
+        par = self.par
+        return C**(-par.sigma) - par.beta * (1 + r) * C_lag**(-par.sigma)
+    
+    def capital_accumulation(self, K, K_lag, Y, C):
+        par = self.par
+        return K - (1 - par.delta) * K_lag + (Y - C)
+    
+    def labor_supply(self, N, C, w):
+        par = self.par
+        return N + (C * w / par.upsilon)**(-1 / par.gamma)
+       
 class RamseyModelClass():
 
     def __init__(self,do_print=True):
@@ -279,3 +449,5 @@ def broyden_solver(f,x0,jac,tol=1e-8,maxiter=100,do_print=False):
     else:
 
         raise ValueError(f'no convergence after {maxiter} iterations')        
+    
+
