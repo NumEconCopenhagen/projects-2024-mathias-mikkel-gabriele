@@ -159,13 +159,13 @@ class ASAD_class():
 
         return np.sum(loss)
     
-    def social_loss(self,type):
+    def social_loss(self,type,kappa=1):
 
         par = self.par
         path = self.path
 
         if type == 'quadratic':
-            return path.yhat**2 + path.pihat**2
+            return path.yhat**2 + kappa*path.pihat**2
         
         if type == 'numeric':
             return np.abs(path.yhat) + np.abs(path.pihat)
