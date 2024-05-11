@@ -51,7 +51,7 @@ class RamseyModelClass():
         par = self.par
         path = self.path
 
-        allvarnames = ['B','K','C','N','rk','w','r','Y','K_lag']
+        allvarnames = ['B','K','C','N','rk','w','r','Y','K_lag','Gamma']
         for varname in allvarnames:
             path.__dict__[varname] =  np.nan*np.ones(par.Tpath)
 
@@ -80,7 +80,8 @@ class RamseyModelClass():
         ss.C = ss.Y - par.delta*ss.K
 
         # e. hours worked
-        ss.N = (1-par.sigma)/(par.sigma + par.gamma)
+        #ss.N = (1-par.sigma)/(par.sigma + par.gamma)
+        ss.N = ((C*path.w)/par.upsilon)**(-(1/par.gamma))
 
         if do_print:
 
@@ -112,7 +113,7 @@ class RamseyModelClass():
         N_plus = np.append(path.N[1:],par.N_ini)
 
         # c. production and factor prices
-        path.Y,path.rk,path.w = production(par,path.Gamma,K_lag)
+        path.Y,path.rk,path.w = production(par,path.Gamma,K_lag, N)
         path.r = path.rk-par.delta
         r_plus = np.append(path.r[1:],ss.r)
 
@@ -133,7 +134,7 @@ class RamseyModelClass():
         
         # a. allocate
         Njac = 3*par.Tpath
-        jac = self.jac = np.nan*np.ones((Njac,Njac,Njac))
+        jac = self.jac = np.nan*np.ones((Njac,Njac))
         
         x_ss = np.nan*np.ones((3,par.Tpath))
         x_ss[0,:] = ss.C
