@@ -1,3 +1,6 @@
+#This file contains the 3 lists of countries that we use in our analysis. The lists are the OECD countries, the IMF advanced economies and the IMF emerging economies. 
+#The lists are used to filter the data in the analysis.
+
 # oecd
 oecd_countries = [
     "AUS", "AUT","BEL", "CAN", "COL", "CHL", "CRI", "CZE","DNK", "EST","FIN", "FRA","DEU", "GRC",
