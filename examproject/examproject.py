@@ -92,7 +92,7 @@ class CareerClass:
 
                 # calculate the prior expected utility
                 for j in range(par.J):
-                    prior_expec_util[i] = 1/i * (par.v[j]+sum(eps[i]))
+                    prior_expec_util[i,j] = 1/i * (i*par.v[j]+sum(eps[i]))
 
                 # choose career based on max prior expected utility
                 choose_career[i] = np.argmax(prior_expec_util[i])
@@ -104,17 +104,23 @@ class CareerClass:
     
     def prior_expec(self, seed=None):
         par = self.par
+
         if seed is not None:
             np.random.seed(seed)
+        
         eps_self = np.zeros((par.N, par.J))
         prior_expec_util = np.zeros((par.N, par.J))
         choose_career = np.zeros(par.N, dtype=int)
         real_util = np.zeros(par.N)
+        friends_noise = np.zeros(par.J)
+
         for i in range(par.N):
             friends_noise = np.random.normal(0, par.sigma, par.J * (i + 1))
             eps_self[i] = np.random.normal(0, par.sigma, par.J)
+
             for j in range(par.J):
-                prior_expec_util[i, j] = np.mean(par.v[j] + friends_noise[j::par.J])
+                prior_expec_util[i, j] = par.v[j] + np.mean(np.random.normal(0, par.sigma, i+1))
+            
             choose_career[i] = np.argmax(prior_expec_util[i])
             real_util[i] = par.v[choose_career[i]] + eps_self[i, choose_career[i]]
         return prior_expec_util, choose_career, real_util
@@ -124,7 +130,7 @@ class CareerClass:
 
         # Share of graduates choosing each career
         for j in range(self.par.J):
-            axs[0].plot(range(1, self.par.N + 1), choices[:, j], label=f'Career {j + 1}')
+            axs[0].bar(choices[:, j], range(1, self.par.N + 1), label=f'Career {j + 1}')
         axs[0].set_title('Share of Graduates Choosing Each Career')
         axs[0].set_xlabel('Graduate Index')
         axs[0].set_ylabel('Number of Graduates')
