@@ -90,7 +90,7 @@ class CareerClass:
             choose_career[i] = np.argmax(prior_expec_util[i])
             real_util[i] = par.v[choose_career[i]] + eps_self[i, choose_career[i]]
 
-        return prior_expec_util, choose_career, real_util
+        return prior_expec_util, choose_career, real_util, eps_self
     
     def visualize_results(self, choices, avg_subjective_utilities, avg_realized_utilities):
         fig, axs = plt.subplots(2, 1, figsize=(10, 10))
@@ -114,30 +114,30 @@ class CareerClass:
         plt.tight_layout()
         plt.show()
     
-    def career_switching(self, choose_career, real_util, seed=None):
+    def career_switching(self, seed=None):
         par = self.par
         if seed is not None:
             np.random.seed(seed)
-        new_choices = np.zeros((par.N, par.J), dtype=int)
-        new_avg_subjective_utilities = np.zeros(par.N)
-        new_avg_realized_utilities = np.zeros(par.N)
+        new_chosen_career = np.zeros(par.N, dtype=int)
+        new_real_util = np.zeros(par.N)
         switch_decisions = np.zeros(par.N)
+        adjusted_priors = np.zeros((par.N, par.J))
 
+        prior_expec_util, choose_career, real_util, eps_self = self.prior_expec()
         for i in range(par.N):
             initial_career = choose_career[i]
             initial_realized_utility = real_util[i]
-            friends_noise = np.random.normal(0, par.sigma, par.J * (i + 1))
-            adjusted_priors = np.zeros(par.J)
             for j in range(par.J):
+                initial_expected_utility = prior_expec_util[i, j]
                 if j != initial_career:
-                    adjusted_priors[j] = np.mean(par.v[j] + friends_noise[j::par.J]) - par.c
+                    adjusted_priors[i, j] = initial_expected_utility - par.c
                 else:
-                    adjusted_priors[j] = initial_realized_utility
-            
-            new_career = np.argmax(adjusted_priors)
-            new_choices[i, new_career] += 1
-            new_avg_subjective_utilities[i] = adjusted_priors[new_career]
-            new_avg_realized_utilities[i] = par.v[new_career] + np.random.normal(0, par.sigma)
-            switch_decisions[i] = 1 if new_career != initial_career else 0
+                    adjusted_priors[i, j] = initial_realized_utility
 
-        return new_choices, new_avg_subjective_utilities, new_avg_realized_utilities, switch_decisions
+            # Choose the career with the highest expected utility
+            new_chosen_career[i] = np.argmax(adjusted_priors[i])
+            new_real_util[i] = par.v[new_chosen_career[i]] + eps_self[i, new_chosen_career[i]]
+            # Record if the graduate decided to switch careers
+            switch_decisions[i] = 1 if new_chosen_career[i] != initial_career else 0
+    
+        return new_chosen_career, switch_decisions, adjusted_priors, new_real_util
