@@ -12,6 +12,7 @@ class CareerClass:
         par.J = 3
         par.N = 10
         par.K = 10000
+        par.i = np.array([1,2,3,4,5,6,7,8,9,10])
 
         par.F = np.arange(1,par.N+1)
         par.sigma = 2
@@ -65,3 +66,30 @@ class CareerClass:
         sum_eps = sum(eps)
 
         return sum_eps
+    
+    def prior_expec(self, seed=None):
+        '''
+        Calculates prior expected utility based on friends
+        '''
+        par = self.par
+
+        if seed is not None:
+            np.random.seed(seed)
+
+        eps = np.empty()
+        eps_self = np.array(par.J)
+
+        for i in range(1,11,1):
+            # do the J*i random draws for friends noise
+            eps[i] = np.random.normal(0, par.sigma, par.J*i)
+            # do the J random draws for own noise
+            eps_self[i] = np.random.normal(0, par.sigma, par.J)
+
+            for j in range(par.J):
+                prior_expec_util_i = 1/i * (sum(par.v[j]+(eps[i])))
+
+            choose_career = max(prior_expec_util_i)
+
+            real_util = par.v == choose_career + eps_self_i
+
+        return prior_expec_util, choose_career, real_util
