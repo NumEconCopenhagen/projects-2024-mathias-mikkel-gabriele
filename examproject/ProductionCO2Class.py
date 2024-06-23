@@ -51,10 +51,10 @@ class ProductionCO2Class():
         par = self.par
         return (1-par.alpha)*(l+par.T+pi)/(p2+par.tau)
 
-    def optimal_l(self,p1,p2,pi):
+    def optimal_l(self, p1, p2, pi):
         par = self.par
-        obj = lambda l: -np.log(self.optimal_c1(l,p1,pi)**par.alpha*self.optimal_c2(l,pi,p2)**(1-par.alpha))-par.nu*(l**(1+par.epsilon)/1+par.epsilon)
-        res = sp.optimize.minimize_scalar(obj,bounds=(0,1),method="bounded")
+        obj = lambda l: -(np.log(self.optimal_c1(l, p1, pi)**par.alpha * self.optimal_c2(l, pi, p2)**(1 - par.alpha)) - par.nu * (l**(1 + par.epsilon) / (1 + par.epsilon)))
+        res = sp.optimize.minimize_scalar(obj, bounds=(0, 1), method="bounded")
         l_star = res.x
         c1_star = self.optimal_c1(l_star, p1, pi)
         c2_star = self.optimal_c2(l_star, p2, pi)
@@ -131,9 +131,12 @@ class ProductionCO2Class():
         U = self.utility_function(l_star, c1_star, c2_star)
         
         SWF = U - par.kappa * y2_star
+
         print(f'U={U:.2f}')
+        print(f'y1={y1_star:.2f}')
         print(f'y2={y2_star:.2f}')
         print(f'SWF={SWF:.2f}')
+        print(f'l={l_star}')
         return -SWF  # Minimize the negative of SWF to maximize SWF
 
     def find_optimal_tau(self):
