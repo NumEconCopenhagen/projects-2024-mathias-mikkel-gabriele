@@ -98,7 +98,7 @@ class CareerClass:
         average_realized_utilities = np.mean(realized_utilities, axis=0)
 
         # Plot results
-        fig, axs = plt.subplots(2, 1, figsize=(10, 15))
+        fig, axs = plt.subplots(2, 1, figsize=(7, 10))
 
         # Share of graduates choosing each career
         for j in range(par.J):
@@ -180,7 +180,7 @@ class CareerClass:
         average_switch_decisions = np.mean(switch_decisions, axis=0)
 
         # Plot new results
-        fig, axs = plt.subplots(2, 1, figsize=(10, 15))
+        fig, axs = plt.subplots(2, 1, figsize=(7, 10))
 
         # Share of graduates switching careers
         axs[0].plot(range(1, par.N+1), average_switch_decisions)
