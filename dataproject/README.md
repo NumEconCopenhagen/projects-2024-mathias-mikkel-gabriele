@@ -1,6 +1,6 @@
 # Data analysis project
 
-Our project is titled **PWT Dataproject** and is about xxx.
+Our project is titled **PWT Dataproject** and is about data cleaning, exploratory data analysis, and other simple data manipulation. We also do light statistical modelling mostly as check for Mathias BA project and to further explore pythons capabilities. 
 
 The **results** of the project can be seen from running [dataproject.ipynb](dataproject.ipynb).
 
