@@ -4,9 +4,12 @@ from types import SimpleNamespace
 
 class CareerClass:
     '''
-    
+    Class to solve the career choice model in problem 2.
     '''
     def __init__(self):
+        '''
+        Initialize class and set parameter values
+        '''
         par = self.par = SimpleNamespace()
 
         # Set baseline parameters
@@ -24,7 +27,11 @@ class CareerClass:
 
     def expec_and_avg_utility(self, seed=None):
         '''
-        Calculates the expected and average utility of a given career choice
+        Calculates the expected and average utility of a given career choice. 
+        It is simulated K times, in the sense that we draw random noise 
+        for each career K times.
+
+        Args: Seed for random draws
         '''
         # use class initialization parameters
         par = self.par
@@ -49,8 +56,15 @@ class CareerClass:
     
     def simulate_career_choices(self, seed=None):
         '''
-        Simulates the career choice of N using prior expectation. 
+        Simulates and output the career choice of each graduate type K times using prior expectation based on friends. 
+
+        Calculates and outputs prior expected utility based on friends and realized utility based on own noise term.
+
+        Graphs the results as requested in question 2.2, though they are also returned as arrays for completeness.
+        
+        Args: Seed for random draws
         '''
+
         # use class initialization parameters
         par = self.par
 
@@ -108,7 +122,17 @@ class CareerClass:
 
         # return key results for question 2.3
         return choices, average_prior_expected_utilities, average_realized_utilities, realized_utilities
+    
     def simulate_switching_career(self, choices, realized_utilities, seed=None):
+        '''
+        Calculates the career choice of each graduate type K times with switching cost. 
+
+        Outputs share of graduates switching careers and average new prior expected and realized utilities.
+
+        Graphs results as requested in question 2.3, though they are also returned as arrays for completeness.
+        
+        Args: Previous choices and previous realized utilities. Could be implemented as a call. 
+        '''
 
         # use class initialization parameters
         par = self.par
